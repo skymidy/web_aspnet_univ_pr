@@ -79,7 +79,7 @@ public class AuthController : Controller
         var claims = new List<Claim>
         {
             new Claim(ClaimsIdentity.DefaultNameClaimType, login),
-            new Claim(ClaimsIdentity.DefaultNameClaimType, role.ToString())
+            new Claim(ClaimsIdentity.DefaultRoleClaimType, role.ToString())
         };
 
         ClaimsIdentity id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType,
