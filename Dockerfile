@@ -5,16 +5,23 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["ASP.NET_React.TS_SPA.csproj", "./"]
-RUN dotnet restore "ASP.NET_React.TS_SPA.csproj"
+COPY ["ASPnetWebApp.csproj", "./"]
+RUN dotnet restore "ASPnetWebApp.csproj"
 COPY . .
 WORKDIR "/src/"
-RUN dotnet build "ASP.NET_React.TS_SPA.csproj" -c Release -o /app/build
+RUN dotnet build "ASPnetWebApp.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "ASP.NET_React.TS_SPA.csproj" -c Release -o /app/publish
+RUN dotnet publish "ASPnetWebApp.csproj" -c Release -o /app/publish
+
+FROM node AS react-app  
+WORKDIR /app/client  
+COPY ./client .  
+RUN npm install  
+RUN npm run build  
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "ASP.NET_React.TS_SPA.dll"]
+COPY --from=react-app ./app/client/build /app/client/build  
+ENTRYPOINT ["dotnet", "ASPnetWebApp.dll"]

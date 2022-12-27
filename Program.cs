@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.EntityFrameworkCore;
-using ASPnetWebApp.Repositories;
+using ASPnetWebApp.Database;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 
 var builder = WebApplication.CreateBuilder(args);
 var environment = builder.Environment;
@@ -16,7 +19,7 @@ services.AddSpaStaticFiles(configuration => {
 });
 
 services.AddDbContext<ApplicationContext>(options => options.UseSqlServer(
-    builder.Configuration.GetConnectionString("DbConnection")
+    builder.Configuration.GetConnectionString("DefaultConnection")
 ));
 
 services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -27,6 +30,12 @@ services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
 
 services.AddAuthorization();
 
+services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(@".aspnet/DataProtection-Keys"))
+    .UseCryptographicAlgorithms(new AuthenticatedEncryptorConfiguration()
+    {
+        EncryptionAlgorithm = EncryptionAlgorithm.AES_256_CBC,
+        ValidationAlgorithm = ValidationAlgorithm.HMACSHA256
+    });
 
 var app = builder.Build();
 
