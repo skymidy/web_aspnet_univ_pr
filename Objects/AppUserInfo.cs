@@ -2,7 +2,7 @@ using ASPnetWebApp.Models;
 
 namespace ASPnetWebApp.Objects;
 
-public class AppUserProfile
+public class AppUserInfo
 {
     public Guid Id { get; private set; } = Guid.Empty;
 
@@ -10,27 +10,24 @@ public class AppUserProfile
 
     public string Role { get; private set; } = string.Empty;
 
-    public List<PairRecord> PairRecords { get; private set; } = new();
-
-    public UserProfile? UserProfile { get; private set; } = null;
+    public AppUserProfile UserProfile { get; private set; } = null;
 
     public string ErrorMessage { get; private set; } = string.Empty;
 
-    public static AppUserProfile Success(User user)
+    public static AppUserInfo Success(User user)
     {
-        return new AppUserProfile
+        return new AppUserInfo
         {
             Id = user.Id,
             LoginName = user.LoginName,
             Role = user.Role,
-            PairRecords = user.PairRecords,
-            UserProfile = user.UserProfile
+            UserProfile = AppUserProfile.CopyUserProfile(user.UserProfile)
         };
     }
 
-    public static AppUserProfile Fail(string errorMessage)
+    public static AppUserInfo Fail(string errorMessage)
     {
-        return new AppUserProfile
+        return new AppUserInfo
         {
             ErrorMessage = errorMessage
         };

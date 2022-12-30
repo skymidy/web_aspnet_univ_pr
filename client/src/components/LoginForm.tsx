@@ -1,11 +1,13 @@
 import { Box, Button, Form, FormField, TextInput, Text } from "grommet";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Hide, View } from "grommet-icons";
 import { useNavigate } from "react-router-dom";
 import { AuthInput } from "../objects/AuthInput";
-import { authRepository } from "../repositories/AuthRepository";
+import { AuthInfo } from "../objects/AuthInfo";
+import { AuthContext } from "../contexts/AuthContext";
 
 const LoginForm = (props: any) => {
+  const {login} = useContext(AuthContext);
   const [value, setValue] = useState({ login: "", password: "" });
   const [reveal, setReveal] = useState(false);
   const navigate = useNavigate();
@@ -13,13 +15,15 @@ const LoginForm = (props: any) => {
   const handleLogin = (input: AuthInput) => {
     console.log(input);
 
-    authRepository.login(input).finally(() => {
-      console.log(authRepository.getInfo());
+    login(input).then((data: AuthInfo) => {
+      if(data.isAuthenticated){
+        navigate("/");
+      }
     });
   };
 
   return (
-    <Box fill="horizontal" align="center" justify="center">
+    <Box fill align="center" justify="center">
       <Box width="medium" margin={{ horizontal: "large" }}>
         <Form
           value={value}
@@ -52,7 +56,7 @@ const LoginForm = (props: any) => {
             </Text>
             <Button
               onClick={() => {
-                navigate("/");
+                navigate("/registration");
               }}
               color="limegreen"
               fill="horizontal"

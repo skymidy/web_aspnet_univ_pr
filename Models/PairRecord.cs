@@ -10,8 +10,6 @@ public class PairRecord
     public Guid Id { get; set; } = Guid.Empty;
     
     public Guid UserId { get; set; } = Guid.Empty;
-    [ForeignKey("UserId")]
-    public User User { get; set; }
     
     public Guid PairedUserId { get; set; } = Guid.Empty;
     

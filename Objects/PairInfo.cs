@@ -1,10 +1,13 @@
+using ASPnetWebApp.Database;
+using ASPnetWebApp.Models;
+
 namespace ASPnetWebApp.Objects;
 
 public class PairInfo
 {
-    public Guid UserId { get; set; } = Guid.Empty;
+    public string UserId { get; set; } = string.Empty;
     
-    public Guid PairedUserId { get; set; } = Guid.Empty;
+    public string PairedUserId { get; set; } = string.Empty;
     
     public string Type { get; set; } = string.Empty;
 
@@ -12,23 +15,17 @@ public class PairInfo
     
     public string RatingDescription { get; set; } = string.Empty;
 
-    public static PairsInfo FromModelTPairsInfo(User user)
+    public static PairInfo FromModelTPairInfo(PairRecord record, ApplicationContext db)
     {
-        return new PairsInfo
+        var userId = db.Users.Where((user => user.Id.Equals(record.UserId))).First().LoginName;
+        var pairedUserId = db.Users.Where((user => user.Id.Equals(record.PairedUserId))).First().LoginName;
+        return new PairInfo
         {
-            Id = user.Id,
-            LoginName = user.LoginName,
-            Role = user.Role,
-            PairRecords = user.PairRecords,
-            UserProfile = AppUserProfile.CopyUserProfile(user.UserProfile)
-        };
-    }
-
-    public static PairsInfo Fail(string errorMessage)
-    {
-        return new PairsInfo
-        {
-            ErrorMessage = errorMessage
+            UserId = userId,
+            PairedUserId = pairedUserId,
+            Type = record.Type,
+            Rating = record.Rating,
+            RatingDescription = record.RatingDescription
         };
     }
 }

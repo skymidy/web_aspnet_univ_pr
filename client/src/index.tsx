@@ -9,9 +9,15 @@ import {
   Outlet,
 } from "react-router-dom";
 import { AuthPage } from "./pages/AuthPage";
-import { AppLayoutUI } from "./pages/AppLayoutUI";
 import { HomePage } from "./pages/HomePage";
 import { RegistrationPage } from "./pages/RegistrationPage";
+import { ProfilePage } from "./pages/ProfilePage";
+import { PairingPage } from "./pages/PairingPage";
+import { PairingRecordsPage } from "./pages/PairingRecordsPage";
+import { AuthContextProvider } from "./contexts/AuthContextProvider";
+import { profileRepository } from "./repositories/ProfileRepository";
+import { AppLayoutUI } from "./pages/AppLayoutUI";
+import { Wrapper } from "./pages/Wrapper";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -19,10 +25,19 @@ const root = ReactDOM.createRoot(
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route element={<AppLayoutUI children={<Outlet />} />}>
+    <Route element={<Wrapper children={<Outlet />} />}>
       <Route index element={<HomePage />} />
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/registration" element={<RegistrationPage />} />
+      <Route
+        path="/profile/*"
+        element={<ProfilePage />}
+        // loader={async ({ params }) => {
+        //   return profileRepository.getProfile(params["*"]);
+        // }}
+      />
+      <Route path="/pair" element={<PairingPage />} />
+      <Route path="/history" element={<PairingRecordsPage />} />
     </Route>
   )
 );

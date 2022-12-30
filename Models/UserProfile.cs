@@ -5,10 +5,10 @@ namespace ASPnetWebApp.Models;
 
 public class UserProfile
 {
-    [Key]
+    [Key] public Guid Id { get; set; } = Guid.Empty;
+
     public Guid UserId { get; set; } = Guid.Empty;
-    [ForeignKey("UserId")]
-    public User User { get; set; }
+    [ForeignKey("UserId")] public User? User { get; set; }
 
     public string Knowledge { get; set; } = string.Empty;
 

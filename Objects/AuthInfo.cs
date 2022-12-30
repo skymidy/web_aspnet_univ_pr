@@ -10,22 +10,27 @@ public class AuthInfo
     /// <summary>
     /// User's authentication status
     /// </summary>
-    public bool IsAuthenticated { get; private set; }
+    public bool IsAuthenticated { get; protected set; }
+
+    public string LoginName { get; protected set; } = string.Empty;
     
     /// <summary>
     /// User's role
     /// </summary>
-    public RoleType Role { get; private set; }
+    public RoleType Role { get; protected set; }
+     
+    public string ErrorMessage { get; private set; } = string.Empty;
 
     /// <summary>
     /// User's successful authentication method 
     /// </summary>
     /// <param name="role">User's role</param>
     /// <returns></returns>
-    public static AuthInfo Success(RoleType role)
+    public static AuthInfo Success(string loginName, RoleType role)
     {
         return new AuthInfo()
         {
+            LoginName = loginName,
             IsAuthenticated = true,
             Role = role
         };
@@ -35,12 +40,13 @@ public class AuthInfo
     /// User's failed authentication method 
     /// </summary>
     /// <returns></returns>
-    public static AuthInfo Fail()
+    public static AuthInfo Fail(string errorMessage)
     {
         return new AuthInfo()
         {
             IsAuthenticated = false,
-            Role = RoleType.Undefined
+            Role = RoleType.Undefined,
+            ErrorMessage = errorMessage
         };
     }
 }

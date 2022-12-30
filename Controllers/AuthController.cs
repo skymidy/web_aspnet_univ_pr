@@ -1,9 +1,12 @@
 ﻿using System.Security.Claims;
 using ASPnetWebApp.Database;
 using ASPnetWebApp.Enums;
+using ASPnetWebApp.Models;
 using ASPnetWebApp.Objects;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ASPnetWebApp.Controllers;
 
@@ -15,16 +18,13 @@ namespace ASPnetWebApp.Controllers;
 /// 
 /// It's using cookies for saving information about
 /// user's identity and also can show it by using special rout.
-///
-/// Now it's just mocking database using if-clause!!! 
 /// </summary>
 public class AuthController : Controller
 {
-
     #region private
 
     private ApplicationContext db;
-    
+
     /// <summary>
     /// Cookies baker
     /// </summary>
@@ -52,46 +52,79 @@ public class AuthController : Controller
     }
 
     #endregion
-    
+
     public AuthController(ApplicationContext context)
     {
         db = context;
     }
+    
     /// <summary>
     /// Api-route for user's registration process 
     /// </summary>
-    /// <param name="input">Login data</param>
-    /// <returns>AuthInfo object with user's login information</returns>
+    /// <param name="input">Registration data</param>
+    /// <returns>RegInfo object with user's registartion information</returns>
     [HttpPost]
-    [Route("auth/reg")]
+    [Route("api/auth/reg")]
     public async Task<AuthInfo> Registration([FromBody] AuthInput input)
     {
-        
-        if (input.login == "test" && input.password == "admin")
-        {
-            await SetCookies(input.login, RoleType.Admin);
-            return AuthInfo.Success(RoleType.Admin);
-        }
+        var loginUppercase = input.login.ToUpper();
+        var passwordHasher = new PasswordHasher<string>();
+        var hashedPassword = passwordHasher.HashPassword(loginUppercase, input.password);
 
-        return AuthInfo.Fail();
+        var newUser = new User
+        {
+            LoginName = input.login, LoginNameUppercase = loginUppercase, PasswordHash = hashedPassword,
+            Role = RoleType.User.ToString()
+        };
+
+        await db.Users.AddAsync(newUser);
+
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateException e)
+        {
+            return AuthInfo.Fail(e.Message);
+        }
+        
+        await SetCookies(loginUppercase, RoleType.User);
+        return AuthInfo.Success(loginUppercase, RoleType.User);
     }
-    
+
     /// <summary>
     /// Api-route for user's authentication process 
     /// </summary>
     /// <param name="input">Login data</param>
     /// <returns>AuthInfo object with user's login information</returns>
     [HttpPost]
-    [Route("auth/login")]
+    [Route("api/auth/login")]
     public async Task<AuthInfo> Login([FromBody] AuthInput input)
     {
-        if (input.login == "test" && input.password == "admin")
+        var loginUppercase = input.login.ToUpper();
+        var passwordHasher = new PasswordHasher<string>();
+        var users = db.Users.Where(p => p.LoginNameUppercase == loginUppercase);
+        User user;
+        try
         {
-            await SetCookies(input.login, RoleType.Admin);
-            return AuthInfo.Success(RoleType.Admin);
+            user = users.First();
+        }catch(InvalidOperationException e)
+        {
+            return AuthInfo.Fail("Incorrect login or password");
+        }
+        
+        var hashedPassword = user.PasswordHash;
+
+        var result = passwordHasher.VerifyHashedPassword(loginUppercase, hashedPassword, input.password);
+        
+
+        if (result.Equals(PasswordVerificationResult.Success))
+        {
+            await SetCookies(loginUppercase, Role.FromString(user.Role));
+            return AuthInfo.Success(loginUppercase, Role.FromString(user.Role));
         }
 
-        return AuthInfo.Fail();
+        return AuthInfo.Fail("Incorrect login or password");
     }
 
     /// <summary>
@@ -99,7 +132,7 @@ public class AuthController : Controller
     /// </summary>
     /// <returns>AuthInfo object with user's login information</returns>
     [HttpGet]
-    [Route("auth/logout")]
+    [Route("api/auth/logout")]
     public async Task<AuthInfo> Logout()
     {
         await RemoveCookies();
@@ -111,17 +144,17 @@ public class AuthController : Controller
     /// </summary>
     /// <returns>AuthInfo object with user's login information</returns>
     [HttpGet]
-    [Route("auth/getInfo")]
+    [Route("api/auth/getInfo")]
     public AuthInfo GetInfo()
     {
         if (User?.Identity?.IsAuthenticated ?? false)
         {
             var role = User.FindFirstValue(ClaimsIdentity.DefaultRoleClaimType);
             RoleType roleType = Role.FromString(role);
-            return AuthInfo.Success(roleType);
+            var loginName = User.FindFirstValue(ClaimsIdentity.DefaultNameClaimType);
+            return AuthInfo.Success(loginName, roleType);
         }
 
-        return AuthInfo.Fail();
+        return AuthInfo.Fail("");
     }
-
 }
